@@ -16,6 +16,7 @@ public:
             abortNotInLoopThread();
         }
     }
+    EventLoop* getEventLoopOfCurrentThread();
     bool isInLoopThread() const { return threadId_ ==static_cast<pid_t>(pthread_self());}
 private:
     void abortNotInLoopThread();
