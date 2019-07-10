@@ -7,6 +7,7 @@
 #define EVENTLOOP
 #include <pthread.h>
 
+class Channel;
 class EventLoop{
 
 public:
@@ -21,6 +22,8 @@ public:
     EventLoop* getEventLoopOfCurrentThread();
     bool isInLoopThread() const { return threadId_ ==static_cast<pid_t>(pthread_self());}
     
+    void updateChannel(Channel* channel);
+    void removeChannel(Channel* channel);
 private:
     void abortNotInLoopThread();
     bool loop_;
