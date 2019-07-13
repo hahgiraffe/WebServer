@@ -6,8 +6,10 @@
 #ifndef EVENTLOOP
 #define EVENTLOOP
 #include <pthread.h>
-
+#include <memory>
+#include <vector>
 class Channel;
+class Epoll;
 class EventLoop{
 
 public:
@@ -24,11 +26,16 @@ public:
     
     void updateChannel(Channel* channel);
     void removeChannel(Channel* channel);
+    void quit();
 private:
+
+    typedef std::vector<Channel*> ChannelList;
     void abortNotInLoopThread();
     bool loop_;
     const pid_t threadId_;
-
+    std::unique_ptr<Epoll> poller_;
+    bool quit_;
+    ChannelList activeChannels_;
 };
 
 #endif //EVENTLOOP
