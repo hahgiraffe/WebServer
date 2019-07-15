@@ -49,7 +49,7 @@ private:
     const int fd_;//每个channel对应一个fd
     int events_; //fd关心的io事件
     int revents_;//目前活动的事件
-    int index_;
+    int index_; //kAdded（已经监听）,kNew（新建）,kDeleted（已经被删除）,用于体现当前fd的状态
 
     EventCallback readcallback_;
     EventCallback writecallback_;

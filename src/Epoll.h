@@ -27,7 +27,7 @@ private:
     typedef std::map<int,Channel*> ChannelMap;
     EventLoop* ownerLoop_;
     int epollfd_;
-    EventList events_;
-    ChannelMap channels_;
+    EventList events_;//vector<epoll_event>监听的事件
+    ChannelMap channels_;//map<fd,fd所对应的channel*>
 };
 #endif

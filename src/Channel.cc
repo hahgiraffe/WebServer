@@ -1,10 +1,10 @@
 #include "Channel.h"
 #include "EventLoop.h"
-#include <poll.h>
-
+//#include <poll.h>
+#include <sys/epoll.h>
 const int Channel::kNoneEvent = 0;
-const int Channel::kReadEvent = POLLIN | POLLPRI;
-const int kWriteEvent = POLLOUT;
+const int Channel::kReadEvent = EPOLLIN | EPOLLPRI;
+const int kWriteEvent = EPOLLOUT;
 
 Channel::Channel(EventLoop* loop,int fd)
                                     :loop_(loop),
@@ -17,18 +17,13 @@ Channel::Channel(EventLoop* loop,int fd)
 }
 
 void Channel::handleEvent(){
-    if(revents_ & POLLNVAL){
-        printf("Channel::handle_event() POLLNVAL");
-    }
-
-    if(revents_ & (POLLERR | POLLNVAL)){
+    if(revents_ & EPOLLERR) {
        if(errorcallback_) errorcallback_();
     }
-    
-    if(revents_ & (POLLIN | POLLPRI | POLLRDHUP)){
+    if(revents_ & (EPOLLIN | EPOLLPRI | EPOLLRDHUP)){
         if(readcallback_) readcallback_();
     }
-    if(revents_ & POLLOUT){
+    if(revents_ & EPOLLOUT){
         if(writecallback_) writecallback_();
     }
 }

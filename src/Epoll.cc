@@ -2,7 +2,6 @@
 #include "Log/Logging.h"
 #include "Channel.h"
 #include <sys/epoll.h>
-#include <poll.h>
 #include <error.h>
 #include <assert.h>
 #include <unistd.h>
@@ -11,7 +10,7 @@ using namespace haha_giraffe;
 const int kNew = -1;
 const int kAdded = 1;
 const int kDeleted = 2;
-
+//Epoll构造函数，主要用于初始化epollfd_和events_
 Epoll::Epoll(EventLoop* loop)
                             :ownerLoop_(loop),
                             epollfd_(epoll_create1(EPOLL_CLOEXEC)),
@@ -22,16 +21,17 @@ Epoll::Epoll(EventLoop* loop)
         LOG_ERROR << "EPoller::EPoller";
     }
 }
-    
+//析构函数，关闭epollfd_
 Epoll::~Epoll(){
     ::close(epollfd_);
 }
-
+//将有事件触发的channel放到activeChannel中，
 void Epoll::poll(int timeoutMs,ChannelList* activeChannel){
+    //numEvents是触发事件的数目
     int numEvents = ::epoll_wait(epollfd_, &*events_.begin(),static_cast<int>(events_.size()),timeoutMs);
     if(numEvents>0){
         LOG_INFO<<numEvents<<" events happended";
-        fillActiveChannels(numEvents,activeChannel);//把有events的放到channel中
+        fillActiveChannels(numEvents,activeChannel);//把有events的放到activeChannel中
         if(events_.size() == numEvents){
             //这里指当前所有fd都有事件发生，即扩大数组范围
             events_.resize(events_.size()*2);
@@ -47,14 +47,15 @@ void Epoll::poll(int timeoutMs,ChannelList* activeChannel){
     }
     return ;
 }
-    
+
+//这个函数用于将channel更新到Channels_
 void Epoll::updateChannel(Channel* channel){
     assertInLoopThread();
     LOG_INFO << "fd = " << channel->fd() << " events = " << channel->events();
     const int index = channel->index();
     if (index == kNew || index == kDeleted)
     {
-        // a new one, add with EPOLL_CTL_ADD
+        // 是一个新的fd EPOLL_CTL_ADD
         int fd = channel->fd();
         if (index == kNew)
         {
@@ -71,7 +72,7 @@ void Epoll::updateChannel(Channel* channel){
     }
     else
     {
-        // update existing one with EPOLL_CTL_MOD/DEL
+        //更新EPOLL_CTL_MOD/DEL
         int fd = channel->fd();
         (void)fd;
         assert(channels_.find(fd) != channels_.end());
@@ -88,7 +89,8 @@ void Epoll::updateChannel(Channel* channel){
         }
     }
 }
-    
+
+//在channels_删除channel
 void Epoll::removeChannel(Channel* channel){
     assertInLoopThread();
     int fd = channel->fd();
@@ -107,7 +109,8 @@ void Epoll::removeChannel(Channel* channel){
     }
     channel->set_index(kNew);
 }
-    
+
+//将numEvents个数的触发事件的channel*放到activeChannels
 void Epoll::fillActiveChannels(int numEvents,ChannelList* activeChannels) const{
     for(int i=0;i<numEvents;i++){
         Channel* channel = static_cast<Channel*>(events_[i].data.ptr);
@@ -122,7 +125,7 @@ void Epoll::fillActiveChannels(int numEvents,ChannelList* activeChannels) const{
     }
 }
 
-//更改channel中fd监听的事件
+//更改channel中channel中fd监听的事件
 void Epoll::update(int operation, Channel* channel){
     struct epoll_event event;
     bzero(&event, sizeof event);
@@ -131,13 +134,14 @@ void Epoll::update(int operation, Channel* channel){
     int fd = channel->fd();
     if (::epoll_ctl(epollfd_, operation, fd, &event) < 0)
     {
-        if (operation == EPOLL_CTL_DEL)
-        {
+        // if (operation == EPOLL_CTL_DEL)
+        // {
+        // LOG_ERROR << "epoll_ctl op=" << operation << " fd=" << fd;
+        // }
+        // else
+        // {
+        // LOG_ERROR << "epoll_ctl op=" << operation << " fd=" << fd;
+        // }
         LOG_ERROR << "epoll_ctl op=" << operation << " fd=" << fd;
-        }
-        else
-        {
-        LOG_ERROR << "epoll_ctl op=" << operation << " fd=" << fd;
-        }
     }
 }
