@@ -3,8 +3,8 @@
  * @Author: haha_giraffe
  * @Date: 2019-07-05 17:49:47
  */
-#ifndef CHANNEL
-#define CHANNEL
+#ifndef CHANNEL_H
+#define CHANNEL_H
 #include "noncopyable.h"
 #include <functional>
 using namespace std;

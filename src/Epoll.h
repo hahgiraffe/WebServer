@@ -3,8 +3,8 @@
  * @Author: haha_giraffe
  * @Date: 2019-07-09 12:10:05
  */
-#ifndef EPOLL
-#define EPOLL
+#ifndef EPOLL_H
+#define EPOLL_H
 #include <vector>
 #include <map>
 #include "EventLoop.h"

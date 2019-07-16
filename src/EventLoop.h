@@ -3,15 +3,15 @@
  * @Author: haha_giraffe
  * @Date: 2019-06-21 16:07:14
  */
-#ifndef EVENTLOOP
-#define EVENTLOOP
+#ifndef EVENTLOOP_H
+#define EVENTLOOP_H
 #include <pthread.h>
 #include <memory>
 #include <vector>
+#include "noncopyable.h"
 class Channel;
 class Epoll;
-class EventLoop{
-
+class EventLoop : noncopyable{
 public:
     EventLoop();
     ~EventLoop();
@@ -28,7 +28,6 @@ public:
     void removeChannel(Channel* channel);
     void quit();
 private:
-
     typedef std::vector<Channel*> ChannelList;
     void abortNotInLoopThread();
     bool loop_;
