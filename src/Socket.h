@@ -1,5 +1,5 @@
 /*
- * @Description:  
+ * @Description:  sockfd的封装类，封装了对套接字的操作bind,listen,accept等
  * @Author: haha_giraffe
  * @Date: 2019-07-15 20:03:12
  */

@@ -1,5 +1,5 @@
 /*
- * @Description: 
+ * @Description: 将Socket,Channel整合在一起
  * @Author: haha_giraffe
  * @Date: 2019-07-15 19:40:54
  */
