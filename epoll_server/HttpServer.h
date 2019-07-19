@@ -1,5 +1,5 @@
 /*
- * @Description: 
+ * @Description: HttpServer用于实现基础操作
  * @Author: hahagiraffe
  * @Date: 2019-07-18 11:45:07
  */
@@ -16,6 +16,9 @@ public:
     ~HttpServer();
     void start();
 private:
+
+    void setnonblock(int fd);
+
     void handle_accept();
     void bind();
     void listen();

@@ -1,3 +1,8 @@
+/*
+ * @Description: sockaddr_in的封装类
+ * @Author: hahagiraffe
+ * @Date: 2019-07-18 18:06:04
+ */
 #ifndef ADDRESS_H
 #define ADDRESS_H
 #include <sys/socket.h>

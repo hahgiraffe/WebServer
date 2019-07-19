@@ -1,5 +1,5 @@
 /*
- * @Description: EPOLL的封住类
+ * @Description: EPOLL的封装类
  * @Author: hahagiraffe
  * @Date: 2019-07-18 11:46:47
  */
@@ -14,9 +14,11 @@ public:
     ~Epoll(){
         ::close(epoll_fd);
     }
-    
-    void Epoll_ctl(int option,int fd,struct epoll_event& event);
-    int Epoll_wait(struct epoll_event* event);
+    void epoll_add(int fd,struct epoll_event& event);
+    void epoll_mod(int fd,struct epoll_event& event);
+    void epoll_delete(int fd,struct epoll_event& event);
+    //void Epoll_ctl(int option,int fd,struct epoll_event& event);
+    int wait(struct epoll_event* event);
     int getfd() { return epoll_fd; }
 private:
     int epoll_fd;
