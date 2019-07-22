@@ -1,6 +1,7 @@
 #include "HttpServer.h"
 #include "Epoll.h"
 #include "../src/Log/Logging.h"
+#include "IOutil.h"
 #include <iostream>
 #include <fcntl.h>
 #include <unistd.h>
@@ -46,32 +47,6 @@ void HttpServer::listen(){
     LOG_INFO<<"listen success";
 }
 
-//新连接，接收事件
-void HttpServer::handle_accept(){
-    //因为sockfd_设置为非阻塞，accept这里就要变成while
-    struct sockaddr_in clientaddr;
-    socklen_t clientlen;
-    int clientfd;
-    while((clientfd=::accept(sockfd_,(sockaddr*)&clientaddr,&clientlen))>0){
-        //当大于0，非阻塞的sockfd_才accept成功,通过clientfd服务器与客户端通信
-        setnonblock(clientfd);//将新连接得到的fd设置为非阻塞
-        //在epoll上注册新的clientfd读事件
-        struct epoll_event ev;
-        ev.data.fd=clientfd;
-        ev.events=EPOLLIN | EPOLLET;
-        epoll_->epoll_add(clientfd,ev);
-        //clientmap[clientfd]=client;这里是不行的，Address应该定义为noncopyable
-        LOG_INFO<<"accept success，clientfd is "<<clientfd;
-    }
-    //Address client(clientaddr);
-    if(clientfd==-1){
-        if (errno != EAGAIN && errno != ECONNABORTED && errno != EPROTO && errno != EINTR){
-            LOG_ERROR<<"HttpServer::accept() error";
-        }
-    }
-    
-}
-
 //外部调用，开启服务器
 void HttpServer::start(){
     bind();
@@ -111,25 +86,58 @@ void HttpServer::handle_event(int eventnum,struct epoll_event* events){
     }
 }
 
+//新连接，接收事件
+void HttpServer::handle_accept(){
+    //因为sockfd_设置为非阻塞，accept这里就要变成while
+    struct sockaddr_in clientaddr;
+    socklen_t clientlen;
+    int clientfd;
+    while((clientfd=::accept(sockfd_,(sockaddr*)&clientaddr,&clientlen))>0){
+        //当大于0，非阻塞的sockfd_才accept成功,通过clientfd服务器与客户端通信
+        setnonblock(clientfd);//将新连接得到的fd设置为非阻塞
+        //在epoll上注册新的clientfd读事件
+        struct epoll_event ev;
+        ev.data.fd=clientfd;
+        ev.events=EPOLLIN | EPOLLET;
+        epoll_->epoll_add(clientfd,ev);
+        //clientmap[clientfd]=client;这里是不行的，Address应该定义为noncopyable
+        LOG_INFO<<"accept success，clientfd is "<<clientfd;
+    }
+    //Address client(clientaddr);
+    if(clientfd==-1){
+        if (errno != EAGAIN && errno != ECONNABORTED && errno != EPROTO && errno != EINTR){
+            LOG_ERROR<<"HttpServer::accept() error";
+        }
+    }
+    
+}
+
 //处理读事件
 void HttpServer::handle_read(int eventfd){
     //这里非阻塞要while(read)
-    char buf[BUFFESIZE];
-    int readbyte;
-    int allsize=0;
-    while(readbyte=::read(eventfd,buf+allsize,BUFFESIZE-1)>0){
-        allsize+=readbyte;
+    //char buf[BUFFESIZE];
+    //int readbyte;
+    //int allsize=0;
+    // while(readbyte=::read(eventfd,buf+allsize,BUFFESIZE-1)>0){
+    //     allsize+=readbyte;
+    // }
+    // if(readbyte==-1 && errno!=EAGAIN){
+    //     LOG_ERROR<<"read error";
+    //     //挡出错了以后要在epollfd中删除监听此fd的读事件
+    //     struct epoll_event event;
+    //     event.events=EPOLLIN;
+    //     event.data.fd=eventfd;
+    //     epoll_->epoll_delete(eventfd,event);
+    //     ::close(eventfd);
+    // }
+    bool isreadable=false;
+    std::string buffer;
+    if(readbuffer(eventfd,buffer,isreadable)==-1){
+        exit(1);
     }
-    if(readbyte==-1 && errno!=EAGAIN){
-        LOG_ERROR<<"read error";
-        //挡出错了以后要在epollfd中删除监听此fd的读事件
-        struct epoll_event event;
-        event.events=EPOLLIN;
-        event.data.fd=eventfd;
-        epoll_->epoll_delete(eventfd,event);
-        ::close(eventfd);
-    }
-    std::cout<<buf;
+    std::cout<<"---------------"<<std::endl;
+    std::cout<<buffer;
+    std::cout<<"---------------"<<std::endl;
     /*将其监听读事件更改为监听写事件
     这里要理解一下，在ET模式下，当epoll注册了EPOLLOUT事件时，
     即刻就使得epoll_wait返回，因为当fd的输出缓冲区为空就会返回EPOLLOUT事件
@@ -148,17 +156,18 @@ void HttpServer::handle_write(int eventfd){
     char buf2[BUFFESIZE];
     snprintf(buf2,sizeof(buf2),"HTTP/1.1 200 OK\r\nContent-Length: %d\r\n\r\nHello World\n", 12);
     int datasize=strlen(buf2);//strlen(buf2)为11 sizeof(buf2)为BUFFERSIZE
-    int writebyte,n=datasize;
-    while(n>0){
-        writebyte=::write(eventfd,buf2+datasize-n,n);
-        if(writebyte<0){
-            LOG_ERROR<<"write error";
-            break;
-        }
-        n-=writebyte;
-    }
-    
-    std::cout<<buf2;
+    // int writebyte,n=datasize;
+    // while(n>0){
+    //     writebyte=::write(eventfd,buf2+datasize-n,n);
+    //     if(writebyte<0){
+    //         LOG_ERROR<<"write error";
+    //         break;
+    //     }
+    //     n-=writebyte;
+    // }
+    // std::cout<<buf2;
+    std::string buffer(buf2);
+    writebuffer(eventfd,buffer,datasize);
     //又更改为读事件
     struct epoll_event event;
     event.data.fd=eventfd;

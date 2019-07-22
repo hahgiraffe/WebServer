@@ -1,8 +1,10 @@
-#include "Address.h"
-#include "Epoll.h"
+#include "HttpData.h"
+#include <functional>
 #include "HttpServer.h"
-
 int main(){
-    HttpServer server(1234);
-    server.start();
+    //HttpServer server(1233);
+    //server.start();
+    HttpData data(1233);
+    std::shared_ptr<HttpServer> server=data.getserver();
+    server->start();
 }

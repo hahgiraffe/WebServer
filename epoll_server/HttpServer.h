@@ -15,6 +15,16 @@ public:
     HttpServer(int port,std::string addr="127.0.0.1");
     ~HttpServer();
     void start();
+    int getfd() {return sockfd_;}
+    void setreadhandle(std::function<void(void)> handle){
+        handleRead_=handle;
+    }
+    void setwritehandle(std::function<void(int)> handle){
+        handleWrite_=handle;
+    }
+    void setconnectionhandle(std::function<void(void)> handle){
+        handleConn_=handle;
+    }
 private:
 
     void setnonblock(int fd);
@@ -34,5 +44,9 @@ private:
     const int LISTENQUEEN=10;
     const int EPOLLEVENTS=100;
     const int BUFFESIZE=1000;
+
+    std::function<void(void)> handleRead_;
+    std::function<void(int)> handleWrite_;
+    std::function<void(void)> handleConn_;
 };
 #endif
