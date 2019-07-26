@@ -9,6 +9,8 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <functional>
+#include "Epoll.h"
 class Epoll;
 class HttpServer{
 public:
@@ -16,14 +18,17 @@ public:
     ~HttpServer();
     void start();
     int getfd() {return sockfd_;}
-    void setreadhandle(std::function<void(void)> handle){
+    void setreadhandle(std::function<void(int)> handle){
         handleRead_=handle;
     }
     void setwritehandle(std::function<void(int)> handle){
         handleWrite_=handle;
     }
-    void setconnectionhandle(std::function<void(void)> handle){
+    void setconnectionhandle(std::function<void(uint32_t*)> handle){
         handleConn_=handle;
+    }
+    void setepollmod(int readfd,struct epoll_event event){
+        epoll_->epoll_mod(readfd,event);
     }
 private:
 
@@ -45,8 +50,8 @@ private:
     const int EPOLLEVENTS=100;
     const int BUFFESIZE=1000;
 
-    std::function<void(void)> handleRead_;
+    std::function<void(int)> handleRead_;
     std::function<void(int)> handleWrite_;
-    std::function<void(void)> handleConn_;
+    std::function<void(uint32_t*)> handleConn_;
 };
 #endif

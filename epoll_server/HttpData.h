@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <map>
 #include <functional>
+#include <memory>
 
 class HttpServer;
 enum ProcessState
@@ -99,9 +100,9 @@ private:
     bool error_;
     int nowreadpos_;
 
-    void handleRead();
-    void handleWrite();
-    void handleConn();
+    void handleRead(int);
+    void handleWrite(int);
+    void handleConn(__uint32_t* );
     void handleError(int fd,int errornum,std::string errormessage);
     URIState parseURI();
     HeaderState parseHeaders();

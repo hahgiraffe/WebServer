@@ -1,5 +1,4 @@
 #include "HttpServer.h"
-#include "Epoll.h"
 #include "../src/Log/Logging.h"
 #include "IOutil.h"
 #include <iostream>
@@ -73,15 +72,18 @@ void HttpServer::handle_event(int eventnum,struct epoll_event* events){
             //新连接
             LOG_INFO<<"a new connection";
             handle_accept();
+            //handleConn_(events[i].events);
         }
         else if(events[i].events & EPOLLIN){
             //可读事件
             LOG_INFO<<"readable task ,readable fd is "<<events[i].data.fd;
-            handle_read(eventfd);
+            //handle_read(eventfd);
+            handleRead_(eventfd);
         }else{ 
             //可写事件
             LOG_INFO<<"writable task ，writable fd is "<<events[i].data.fd;
-            handle_write(eventfd);
+            //handle_write(eventfd);
+            handleWrite_(eventfd);
         }
     }
 }
@@ -98,6 +100,9 @@ void HttpServer::handle_accept(){
         //在epoll上注册新的clientfd读事件
         struct epoll_event ev;
         ev.data.fd=clientfd;
+        //LOG_INFO<<"before "<<(int)ev.events;
+        //handleConn_(&ev.events);
+        //LOG_INFO<<"after "<<(long)ev.events;
         ev.events=EPOLLIN | EPOLLET;
         epoll_->epoll_add(clientfd,ev);
         //clientmap[clientfd]=client;这里是不行的，Address应该定义为noncopyable
@@ -132,7 +137,7 @@ void HttpServer::handle_read(int eventfd){
     // }
     bool isreadable=false;
     std::string buffer;
-    if(readbuffer(eventfd,buffer,isreadable)==-1){
+    if(readbufferfunc(eventfd,buffer,isreadable)==-1){
         exit(1);
     }
     std::cout<<"---------------"<<std::endl;
@@ -167,7 +172,7 @@ void HttpServer::handle_write(int eventfd){
     // }
     // std::cout<<buf2;
     std::string buffer(buf2);
-    writebuffer(eventfd,buffer,datasize);
+    writebufferfunc(eventfd,buffer,datasize);
     //又更改为读事件
     struct epoll_event event;
     event.data.fd=eventfd;
