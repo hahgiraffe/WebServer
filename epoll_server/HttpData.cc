@@ -11,6 +11,7 @@
 #include "Epoll.h"
 using namespace haha_giraffe;
 
+//表示图标
 char favicon[555] = {
   '\x89', 'P', 'N', 'G', '\xD', '\xA', '\x1A', '\xA',
   '\x0', '\x0', '\x0', '\xD', 'I', 'H', 'D', 'R',
@@ -109,14 +110,6 @@ void HttpData::reset(){
     state_ = STATE_PARSE_URI;
     hState_ = H_START;
     headers_.clear();
-    //keepAlive_ = false;
-    // if (timer_.lock())
-    // {
-    //     shared_ptr<TimerNode> my_timer(timer_.lock());
-    //     my_timer->clearReq();
-    //     timer_.reset();
-    // }
-
 }
 
 //读事件
@@ -138,7 +131,7 @@ void HttpData::handleRead(int readfd){
            break;
        }
        else if(Isreadable){
-           //有请求出现，但是没有读取到数据
+           //有请求出现，但是没有读取到数据,最有可能的情况是对方已经关闭了
            LOG_INFO<<"request is here , but no data";
            connectionstate_=ConnectionState::H_DISCONNECTING;
            if(!readnum){
@@ -216,6 +209,7 @@ void HttpData::handleRead(int readfd){
             handleWrite(readfd);
         }
         if(!error_ && state_==ProcessState::STATE_FINISH){
+            LOG_INFO<<"into reset";
             reset();
             if(inputbuffer_.size()>0){
                 if(connectionstate_!=ConnectionState::H_DISCONNECTING){
@@ -224,18 +218,23 @@ void HttpData::handleRead(int readfd){
             }
         }
         else if(!error_ && connectionstate_!=ConnectionState::H_DISCONNECTED){
-            //events_ | EPOLLIN
+            LOG_INFO<<"into H_DISCONNECTING";
+            struct epoll_event event;
+            event.data.fd=readfd;
+            event.events=EPOLLOUT |EPOLLET;
+            server_->setepollmod(readfd,event);
         }
-        struct epoll_event event;
-        event.data.fd=readfd;
-        event.events=EPOLLOUT;
-        server_->setepollmod(readfd,event);
+        //struct epoll_event event;
+        //event.data.fd=readfd;
+        //event.events=EPOLLOUT;
+        //server_->setepollmod(readfd,event);
         //epoll_->epoll_mod(readfd,event);
     }
 }
     
 //写事件
 void HttpData::handleWrite(int eventfd){
+    LOG_INFO<<"into handlewrite";
     if (!error_ && connectionstate_ != H_DISCONNECTED)
     {
         //epoll_->epoll_mod(eventfd,event);
@@ -246,14 +245,13 @@ void HttpData::handleWrite(int eventfd){
             //events_ = 0;
             error_ = true;
         }
-        //if (outputbuffer_.size() > 0){
-            //events_ |= EPOLLOUT;
-        //    event.events|=EPOLLIN;
-        //}
-        struct epoll_event event;
-        event.data.fd=eventfd;
-        event.events=EPOLLIN;
-        server_->setepollmod(eventfd,event);
+        if (outputbuffer_.size() > 0){
+            struct epoll_event event;
+            event.data.fd=eventfd;
+            event.events=EPOLLOUT |EPOLLET;
+            server_->setepollmod(eventfd,event);
+        }
+        
     }
 }
     
@@ -324,8 +322,9 @@ void HttpData::handleError(int fd,int errornum,std::string errormessage){
     writebufferfunc(fd, headerstr, headerstr.size());
 }
 
-//解析URI
+//解析请求行URI
 URIState HttpData::parseURI(){
+    LOG_INFO<<"parseURI";
     std::string& str = inputbuffer_;
     size_t pos=str.find('\r',nowreadpos_);
     if(pos<0){
@@ -413,8 +412,9 @@ URIState HttpData::parseURI(){
     return PARSE_URI_SUCCESS;
 }
     
-//解析header
+//解析头部header
 HeaderState HttpData::parseHeaders(){
+    LOG_INFO<<"parseHeader";
     std::string &str = inputbuffer_;
     int key_start = -1, key_end = -1, value_start = -1, value_end = -1;
     int now_read_line_begin = 0;
@@ -530,7 +530,7 @@ HeaderState HttpData::parseHeaders(){
     return PARSE_HEADER_AGAIN;
 }
     
-//解析request
+//根据解析到的request，返回相应的文件页面
 AnalysisState HttpData::analysisRequest(){
     if (method_ == METHOD_POST)
     {
@@ -580,6 +580,7 @@ AnalysisState HttpData::analysisRequest(){
             head += "\r\n";
             LOG_INFO<<head;
             outputbuffer_+=head;
+            //共享内存映射实现读取文件
             int fd=open(filename_.c_str(),O_RDONLY,0);
             if (fd < 0)
             {

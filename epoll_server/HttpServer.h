@@ -30,6 +30,9 @@ public:
     void setepollmod(int readfd,struct epoll_event event){
         epoll_->epoll_mod(readfd,event);
     }
+    void addepollmod(int readfd,struct epoll_event event){
+        epoll_->epoll_add(readfd,event);
+    }
 private:
 
     void setnonblock(int fd);
