@@ -5,6 +5,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <vector>
+#include <functional>
 #include "AsyncStream.h"
 using namespace std;
 
