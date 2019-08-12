@@ -21,7 +21,7 @@ public:
             abortNotInLoopThread();
         }
     }
-    EventLoop* getEventLoopOfCurrentThread();
+    EventLoop* getEventLoopOfCurrentThread();//返回this指针
     bool isInLoopThread() const { return threadId_ ==static_cast<pid_t>(pthread_self());}
     
     void updateChannel(Channel* channel);
@@ -34,7 +34,7 @@ private:
     const pid_t threadId_;
     std::unique_ptr<Epoll> poller_;
     bool quit_;
-    ChannelList activeChannels_;
+    ChannelList activeChannels_;//存储着事件发生的fd(channel)
 };
 
 #endif //EVENTLOOP

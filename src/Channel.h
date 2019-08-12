@@ -1,5 +1,5 @@
 /*
- * @Description: Channel相当于fd的通道,每一个EventLoop对应一个channel
+ * @Description: Channel相当于fd的通道,每一个EventLoop对应一组channel
  * @Author: haha_giraffe
  * @Date: 2019-07-05 17:49:47
  */
@@ -12,9 +12,10 @@ class EventLoop;
 class Channel : noncopyable{
 public:
     typedef function<void()> EventCallback;
+    typedef function<void(int)> ReadCallback;
     Channel(EventLoop* loop,int fd);
     void handleEvent(); //根据revents的值调用不同的用户调用
-    void setReadCallback(const EventCallback& cb){
+    void setReadCallback(const ReadCallback& cb){
         readcallback_=cb;
     }
     void setWriteCallback(const EventCallback& cb){
@@ -48,10 +49,12 @@ private:
     EventLoop* loop_;//每个channel对应一个EventLoop
     const int fd_;//每个channel对应一个fd
     int events_; //fd关心的io事件
-    int revents_;//目前活动的事件
+    int revents_;//fd目前活动的事件
     int index_; //kAdded（已经监听）,kNew（新建）,kDeleted（已经被删除）,用于体现当前fd的状态
 
-    EventCallback readcallback_;
+    //EventCallback readcallback_;
+    
+    ReadCallback readcallback_;
     EventCallback writecallback_;
     EventCallback errorcallback_;
 };

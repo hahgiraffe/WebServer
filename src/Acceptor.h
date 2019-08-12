@@ -20,7 +20,7 @@ typedef std::function<void (int,const Address&)> NewConnectionCallback;
     }
     void listen();
 private:
-    void handleRead();
+    void handleRead(int );
     EventLoop* loop_;
     Socket acceptSocket_;
     Channel acceptChannel_; //注意这里的acceptSocket_和acceptChannel_的顺序不同

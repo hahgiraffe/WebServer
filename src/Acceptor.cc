@@ -1,3 +1,8 @@
+/*
+ * @Description: 
+ * @Author: hahagiraffe
+ * @Date: 2019-08-12 16:23:16
+ */
 #include "Acceptor.h"
 #include "EventLoop.h"
 #include "Log/Logging.h"
@@ -26,7 +31,7 @@ Acceptor::Acceptor(EventLoop* loop,const Address& addr)
 {
     acceptSocket_.setReuseAddr(true);
     acceptSocket_.bindAddress(addr);
-    acceptChannel_.setReadCallback(std::bind(&Acceptor::handleRead,this));
+    acceptChannel_.setReadCallback(std::bind(&Acceptor::handleRead,this,std::placeholders::_1));
 }
 
 void Acceptor::listen(){
@@ -36,15 +41,27 @@ void Acceptor::listen(){
     acceptChannel_.enableReading();//update->epoll
 }
 //回调的时候读
-void Acceptor::handleRead(){
+void Acceptor::handleRead(int fd){
     loop_->assertInLoopThread();
-    Address peeraddress(0);
-    int connfd=acceptSocket_.accept(peeraddress);
-    if(connfd>=0){
-        newconnectioncallback_(connfd,peeraddress);
+    if(fd==acceptChannel_.fd()){
+        //新连接
+        LOG_INFO<<"new connection";
+        Address peeraddress(0);
+        int connfd=acceptSocket_.accept(peeraddress);
+        if(connfd>=0){
+            newconnectioncallback_(connfd,peeraddress);
+        }
+        else{
+            close(connfd);
+        }
     }
     else{
-        close(connfd);
+        //数据
+        //线程池处理数据
+        LOG_INFO<<"data";
+        char buf[1024];
+        read(fd,buf,1024);
+        LOG_INFO<<"data content is "<<buf;
     }
 }
 

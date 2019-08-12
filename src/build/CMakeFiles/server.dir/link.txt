@@ -1,0 +1,2 @@
+/usr/bin/ar qc libserver.a  CMakeFiles/server.dir/Acceptor.cc.o CMakeFiles/server.dir/Channel.cc.o CMakeFiles/server.dir/Epoll.cc.o CMakeFiles/server.dir/EventLoop.cc.o CMakeFiles/server.dir/Socket.cc.o CMakeFiles/server.dir/Log/Logging.cc.o CMakeFiles/server.dir/Log/LogFile.cc.o CMakeFiles/server.dir/Log/Fileutil.cc.o CMakeFiles/server.dir/Log/AsyncLog.cc.o CMakeFiles/server.dir/Log/AsyncStream.cc.o
+/usr/bin/ranlib libserver.a
