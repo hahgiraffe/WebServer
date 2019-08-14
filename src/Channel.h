@@ -9,54 +9,65 @@
 #include <functional>
 using namespace std;
 class EventLoop;
+class HttpData;
 class Channel : noncopyable{
 public:
-    typedef function<void()> EventCallback;
-    typedef function<void(int)> ReadCallback;
+    typedef function<void()> Callback;
     Channel(EventLoop* loop,int fd);
+    Channel(EventLoop* loop);
+    ~Channel();
     void handleEvent(); //根据revents的值调用不同的用户调用
-    void setReadCallback(const ReadCallback& cb){
+    void setReadCallback(const Callback& cb){
         readcallback_=cb;
     }
-    void setWriteCallback(const EventCallback& cb){
+    void setWriteCallback(const Callback& cb){
         writecallback_=cb;
     }
-    void setErrorCallback(const EventCallback& cb){
+    void setErrorCallback(const Callback& cb){
         errorcallback_=cb;
     }
 
-    int fd() const{ return fd_; }
-    int events() const { return events_; }
+    void setConnCallback(const Callback& cb){
+        conncallback_=cb;
+    }
+    int getfd() const{ return fd_; }
+    void setfd(int fd) { fd_=fd;}
+    //void setholder(std::shared_ptr<HttpData> holder);
+    //std::shared_ptr<HttpData> getholder();
+    // void handleRead();
+    // void handleWrite();
+    // void handleError();
+    // void handleConn();
+    int set_events(int ev) { events_=ev; }
     void set_revents(int revt) { revents_=revt; }
-    bool isNoneEvent() const { return events_ == kNoneEvent; }
-
-    void enableReading() {events_ |= kReadEvent; update(); }
-    void enableWriting() {events_ |= kWriteEvent; update(); }
-    void disableWriting() {events_ &= ~kWriteEvent; update(); }
-    void diableAll() {events_ = kNoneEvent; update(); }
-
-    int index() const { return index_; }
-    void set_index(int index) { index_ = index; }
-
+    int get_events() { return events_;}
     EventLoop* ownerLoop() const { return loop_; }
+    //如果lastevent和event不相同则返回false
+    bool updatelastevent(){
+        bool res=(lastevent_==events_);
+        lastevent_=events_;
+        return res;
+    }
+    int getlastevent(){
+        return lastevent_;
+    }
 private:
-    void update();//用于更改完events后的更新操作
-
-    static const int kNoneEvent;
-    static const int kReadEvent;
-    static const int kWriteEvent;
+    // int parse_URI();
+    // int parse_Header();
+    // int analysisRequest();
 
     EventLoop* loop_;//每个channel对应一个EventLoop
-    const int fd_;//每个channel对应一个fd
+    int fd_;//每个channel对应一个fd
     int events_; //fd关心的io事件
     int revents_;//fd目前活动的事件
-    int index_; //kAdded（已经监听）,kNew（新建）,kDeleted（已经被删除）,用于体现当前fd的状态
+    int lastevent_; //比较和events_区别
 
-    //EventCallback readcallback_;
+    //std::weak_ptr<HttpData> holder_;
     
-    ReadCallback readcallback_;
-    EventCallback writecallback_;
-    EventCallback errorcallback_;
+    Callback readcallback_;
+    Callback writecallback_;
+    Callback errorcallback_;
+    Callback conncallback_;
 };
 
 

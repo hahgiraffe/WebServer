@@ -7,32 +7,50 @@
 #include "EventLoop.h"
 //#include <poll.h>
 #include <sys/epoll.h>
-const int Channel::kNoneEvent = 0;
-const int Channel::kReadEvent = EPOLLIN | EPOLLPRI;
-const int Channel::kWriteEvent = EPOLLOUT;
 
 Channel::Channel(EventLoop* loop,int fd)
                                     :loop_(loop),
                                     fd_(fd),
                                     events_(0),
                                     revents_(0),
-                                    index_(-1)
+                                    lastevent_(0)
 {
 
 }
 
+Channel::Channel(EventLoop* loop)
+                                :loop_(loop),
+                                events_(0),
+                                revents_(0),
+                                lastevent_(0)
+{
+
+}
+
+Channel::~Channel(){
+
+}
+
 void Channel::handleEvent(){
+    events_=0;
     if(revents_ & EPOLLERR) {
        if(errorcallback_) errorcallback_();
     }
     if(revents_ & (EPOLLIN | EPOLLPRI | EPOLLRDHUP)){
-        if(readcallback_) readcallback_(this->fd());
+        if(readcallback_) readcallback_();
     }
     if(revents_ & EPOLLOUT){
         if(writecallback_) writecallback_();
     }
+    if(conncallback_) conncallback_();
 }
 
-void Channel::update(){
-    loop_->updateChannel(this);
-}
+// int Channel::parse_URI(){
+
+// }
+// int Channel::parse_Header(){
+
+// }
+// int Channel::analysisRequest(){
+    
+// }

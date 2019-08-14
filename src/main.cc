@@ -5,11 +5,10 @@
  */
 //测试EventLoop是否满足一个线程中只有一个的要求
 #include <thread>
-#include "../src/EventLoop.h"
-#include "../src/Channel.h"
-#include "../src/Log/Logging.h"
-#include "../src/Acceptor.h"
-#include "../src/Address.h"
+#include "EventLoop.h"
+#include "Channel.h"
+#include "Server.h"
+#include "./Log/Logging.h"
 #include <sys/timerfd.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -57,23 +56,30 @@ EventLoop* loopptr;
 // }
 
 // test2 Acceptor
-void Connectorfunction(int clientfd,const Address& peeraddr){
-    char host[1024];
-    const sockaddr_in addr=peeraddr.getaddress();
-    ::inet_ntop(AF_INET, &addr.sin_addr, host, sizeof host);
-    const int tempport =peeraddr.getaddress().sin_port;
-    LOG_INFO<<"Clinet fd: "<<clientfd<<" peerAddress is "<<host<<" peerport is "<<ntohs(tempport);
-    ::write(clientfd,"gooood\n",10);
+// void Connectorfunction(int clientfd,const Address& peeraddr){
+//     char host[1024];
+//     const sockaddr_in addr=peeraddr.getaddress();
+//     ::inet_ntop(AF_INET, &addr.sin_addr, host, sizeof host);
+//     const int tempport =peeraddr.getaddress().sin_port;
+//     LOG_INFO<<"Clinet fd: "<<clientfd<<" peerAddress is "<<host<<" peerport is "<<ntohs(tempport);
+//     ::write(clientfd,"gooood\n",10);
     
-    //::close(clientfd);
-}
+//     //::close(clientfd);
+// }
+
+// int main(){
+//     EventLoop loop;
+//     //loopptr=&loop;
+//     Address address(1234);
+//     Acceptor acceptor(&loop,address);
+//     acceptor.setNewConnectionCallback(Connectorfunction);
+//     acceptor.listen();
+//     loop.loop();
+// }
 
 int main(){
     EventLoop loop;
-    //loopptr=&loop;
-    Address address(1234);
-    Acceptor acceptor(&loop,address);
-    acceptor.setNewConnectionCallback(Connectorfunction);
-    acceptor.listen();
+    Server httpserver(&loop,3,1234);
+    httpserver.start();
     loop.loop();
 }
