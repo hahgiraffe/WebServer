@@ -1,17 +1,15 @@
 /*
- * @Description: 处理http的请求和解析，每个http对象
+ * @Description: 
  * @Author: hahagiraffe
- * @Date: 2019-07-19 20:48:12
+ * @Date: 2019-08-15 16:53:11
  */
-#ifndef HTTPDATA_H
-#define HTTPDATA_H
-#include <string>
-#include <unistd.h>
-#include <map>
-#include <functional>
+#ifndef HTTPPARSE_H
+#define HTTPPARSE_H
 #include <memory>
+#include <map>
+class EventLoop;
+class Channel;
 
-class HttpServer;
 enum ProcessState
 {
     STATE_PARSE_URI = 1,
@@ -56,7 +54,7 @@ enum ParseState
 
 enum ConnectionState
 {
-    H_CONNECTED = 1,
+    H_CONNECTED = 0,
     H_DISCONNECTING,
     H_DISCONNECTED    
 };
@@ -74,36 +72,43 @@ enum HttpVersion
     HTTP_11
 };
 
-class HttpData{
+class HttpParse :public std::enable_shared_from_this<HttpParse>{
 public:
-    HttpData(int fd);
-    ~HttpData(){
-        ::close(fd_);
-    }
+    HttpParse(EventLoop* loop,int fd);
+    ~HttpParse();
+    void newEvent();
     void reset();
-    std::shared_ptr<HttpServer> getserver(){
-        return server_;
+    std::shared_ptr<Channel> getchannel(){
+        return channel_;
     }
+    EventLoop* getEventloop(){
+        return loop_;
+    }
+    void handleClose();
 private:
-    std::shared_ptr<HttpServer> server_;
+    EventLoop* loop_;
+    std::shared_ptr<Channel> channel_;
     int fd_;
-    std::string inputbuffer_;
-    std::string outputbuffer_;
-    ConnectionState connectionstate_;
+    std::string inBuffer_;
+    std::string outBuffer_;
+    bool error_;
+    ConnectionState connectionState_;
+
     HttpMethod method_;
-    HttpVersion version_;
-    std::string filename_;
+    HttpVersion HTTPVersion_;
+    std::string fileName_;
     std::string path_;
+    int nowReadPos_;
     ProcessState state_;
     ParseState hState_;
+    bool keepAlive_;
     std::map<std::string, std::string> headers_;
-    bool error_;
-    int nowreadpos_;
+    //std::weak_ptr<TimerNode> timer_;
 
-    void handleRead(int);
-    void handleWrite(int);
-    void handleConn(__uint32_t* );
-    void handleError(int fd,int errornum,std::string errormessage);
+    void handleRead();
+    void handleWrite();
+    void handleConn();
+    void handleError(int fd, int err_num, std::string short_msg);
     URIState parseURI();
     HeaderState parseHeaders();
     AnalysisState analysisRequest();
