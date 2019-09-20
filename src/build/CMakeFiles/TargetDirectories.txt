@@ -1,4 +1,0 @@
-/home/chs/WebServer/src/build/CMakeFiles/edit_cache.dir
-/home/chs/WebServer/src/build/CMakeFiles/main.dir
-/home/chs/WebServer/src/build/CMakeFiles/rebuild_cache.dir
-/home/chs/WebServer/src/build/CMakeFiles/server.dir
