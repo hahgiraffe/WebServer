@@ -16,54 +16,24 @@
 #include <stdarg.h>
 #include <map>
 #include "../base/Util.h"
+#include "../base/Thread.h"
+#include "../base/Thread.h"
 #include "LogAppender.h"
-#include "../base/Thread.h"
-#include "../base/Thread.h"
+
+namespace haffe{
 
 #define LOG_LEVEL(logger,level) \
     if(logger->getlevel() <= level) \
-     LogEventWrap(std::shared_ptr<LogEvent> (new LogEvent(logger,level,__FILE__,__LINE__, \
+     LogEventWrap(std::shared_ptr<LogEvent> (new haffe::LogEvent(logger,level,__FILE__,__LINE__, \
      0,haffe::GetThreadID(),haffe::GetCoroutineID(),time(0),haffe::Thread::GetName()))).getSS()
 
-#define Haffe_LOG_DEBUG(logger) LOG_LEVEL(logger,LOG_DEBUG)
+#define Haffe_LOG_DEBUG(logger) LOG_LEVEL(logger,haffe::Loglevel::LOG_DEBUG)
 #define Haffe_LOG_INFO(logger) LOG_LEVEL(logger,LOG_INFO)
 #define Haffe_LOG_WARN(logger) LOG_LEVEL(logger,LOG_WARN)
 #define Haffe_LOG_ERROR(logger) LOG_LEVEL(logger,LOG_ERROR)
 #define Haffe_LOG_FATAL(logger) LOG_LEVEL(logger,LOG_FATAL)
 
 #define Haffe_LOG_ROOT haffe::LoggerMgr::GetInstance()->getroot()
-// #define Haffe_LOG_DEBUG_STDOUT \
-//         std::shared_ptr<Logger> logger(new Logger("hahagiraffe")); \
-//         logger->addAppender(std::shared_ptr<LogAppender> (new StdoutAppender())); \
-//         Haffe_LOG_DEBUG(logger)
-
-// #define Haffe_LOG_INFO_STDOUT \
-//         std::shared_ptr<Logger> logger(new Logger("hahagiraffe")); \
-//         logger->addAppender(std::shared_ptr<LogAppender> (new StdoutAppender())); \
-//         Haffe_LOG_INFO(logger)
-
-// #define Haffe_LOG_WARN_STDOUT \
-//         std::shared_ptr<Logger> logger(new Logger("hahagiraffe")); \
-//         logger->addAppender(std::shared_ptr<LogAppender> (new StdoutAppender())); \
-//         Haffe_LOG_WARN(logger)
-
-// #define Haffe_LOG_ERROR_STDOUT \
-//         std::shared_ptr<Logger> logger(new Logger("hahagiraffe")); \
-//         logger->addAppender(std::shared_ptr<LogAppender> (new StdoutAppender())); \
-//         Haffe_LOG_ERROR(logger)
-
-// #define Haffe_LOG_FATAL_STDOUT \
-//         std::shared_ptr<Logger> logger(new Logger("hahagiraffe")); \
-//         logger->addAppender(std::shared_ptr<LogAppender> (new StdoutAppender())); \
-//         Haffe_LOG_FATAL(logger)
-
-// #define Haffe_LOG_DEBUG_FILESTREAM(name) \
-//         std::shared_ptr<Logger> logger(new Logger("hahagiraffe")); \
-//         std::shared_ptr<FileAppender> fileappender(new FileAppender(name)); \
-//         logger->addAppender(fileappender); \
-//         Haffe_LOG_DEBUG(logger)
-
-namespace haffe{
 
 class LogAppender; //这里提前声明
 class Logger;
@@ -200,6 +170,7 @@ private:
     std::shared_ptr<Logger> logger_;
 };
 
+//日志包装类，主要是让日志使用更加方便
 class LogEventWrap{
 public:
     explicit LogEventWrap(std::shared_ptr<LogEvent> event):

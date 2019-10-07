@@ -3,12 +3,14 @@
  * @Author: hahagiraffe
  * @Date: 2019-08-23 16:10:56
  */
-#include "LogAppender.h"
 #include "Logger.h"
-#include "LogFormatter.h"
+#include <time.h>
 #include <cstring>
 #include <memory>
-#include <time.h>
+#include "LogAppender.h"
+#include "LogFormatter.h"
+
+
 namespace haffe{
     std::string LevelToString(Loglevel level){
         std::string res="UNKOWN";

@@ -4,12 +4,13 @@
  * @Date: 2019-08-30 17:18:21
  */
 #include "LogFormatter.h"
-#include "Logger.h"
 #include <sstream>
 #include <tuple>
 #include <map>
 #include <functional>
 #include <iostream>
+#include "Logger.h"
+
 namespace haffe {
 
     LogFormatter::LogFormatter(const std::string &patten)

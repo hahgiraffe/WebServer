@@ -3,10 +3,11 @@
  * @Author: hahagiraffe
  * @Date: 2019-08-28 16:42:56
  */
-#include "LogFormatter.h"
 #include "LogAppender.h"
-#include "Logger.h"
 #include <iostream>
+#include "LogFormatter.h"
+#include "Logger.h"
+
 namespace haffe {
 
     FileAppender::FileAppender(const std::string& filename)
